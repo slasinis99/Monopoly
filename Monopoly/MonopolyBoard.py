@@ -4,6 +4,8 @@ import csv
 from random import shuffle
 from time import sleep
 
+from Player import BasePlayer, AI_Stephen
+
 DIR_CHANCE = f'{path.Path(__file__).abspath().parent}\\Data\\chance.csv'
 DIR_COMMCHEST = f'{path.Path(__file__).abspath().parent}\\Data\\communitychest.csv'
 DIR_PROPERTIES = f'{path.Path(__file__).abspath().parent}\\Data\\properties.csv' 
@@ -11,7 +13,7 @@ DIR_RAILROADS = f'{path.Path(__file__).abspath().parent}\\Data\\railroads.csv'
 DIR_UTILITIES = f'{path.Path(__file__).abspath().parent}\\Data\\utilities.csv'
 
 class MonopolyBoard():
-    def __init__(self) -> None:
+    def __init__(self, players: PlayerList) -> None:
         #Whether there is a game going.
         self.active = False
 
@@ -19,13 +21,41 @@ class MonopolyBoard():
         self.current_turn = 0
 
         #List of the Player objects in the game
-        self.players = []
+        self.players = players
 
         #List of spaces, can be property, railroad, utility, or text with instructions
         self.spaces = []
 
-        #Map from space index to name of space, for convenience
-        self.space_to_name = {}
+        #Create the universal spaces for community chest and chance
+        space_commchest = CommunityChest()
+        space_chance = Chance()
+
+        #Create the list of all regular properties
+        p_list = []
+        with open(DIR_PROPERTIES, 'r') as file:
+            itr = csv.reader(file)
+            next(itr)
+            for r in itr:
+                p_list.append(Property(str(r[0]), str(r[1]), int(r[2]), int(r[3]), int(r[4]), int(r[5]), int(r[6]), int(r[7]), int(r[8]), int(r[9]), int(r[10]), int(r[11])))
+        
+        #Create the list of all railroads
+        r_list = []
+        with open(DIR_RAILROADS, 'r') as file:
+            itr = csv.reader(file)
+            next(itr)
+            for r in itr:
+                r_list.append(RailRoad(str(r[0]), int(r[1]), int(r[2]), int(r[3]), int(r[4]), int(r[5]), int(r[6])))
+        
+        #Create the list of all utilities
+        u_list = []
+        with open(DIR_UTILITIES, 'r') as file:
+            itr = csv.reader(file)
+            next(itr)
+            for r in itr:
+                u_list.append(Utility(str(r[0]), int(r[1]), int(r[2]), int(r[3]), int(r[4])))
+        
+        #Now we can actually create the list of all spaces
+        self.board = ['go', p_list[0], space_commchest, p_list[1], 'income-tax', r_list[0], p_list[2], space_chance, p_list[3], p_list[4], 'jail', p_list[5], u_list[0], p_list[6], p_list[7], r_list[1], p_list[8], space_commchest, p_list[9], p_list[10], 'park', p_list[11], space_chance, p_list[12], p_list[13], r_list[2], p_list[14], p_list[15], u_list[1], p_list[16], 'goto-jail', p_list[17], p_list[18], space_commchest, p_list[19], r_list[3], space_chance, p_list[20], 'luxury-tax', p_list[21]]
 
 class Property():
     def __init__(self, name: str, color: str, price: int, rent, one_ouse, two_house, three_house, four_house, hotel, mortgage_value: int, house_cost: int, hotel_cost: int) -> None:
@@ -145,7 +175,7 @@ class Utility():
         self.mortgage_value = mortgage_value
 
         #Mutable Fields
-        self.owner: Player = None
+        self.owner: BasePlayer = None
         self.is_mortgaged = False
         self.amount_owned = 0
 
@@ -186,6 +216,9 @@ class CommunityChest():
         #Shuffle the List
         shuffle(self.unused_cards)
     
+    def __str__(self) -> str:
+        return 'Community Chest'
+
     def draw(self) -> CommunityChestCard:
         result = self.unused_cards[-1]
         self.used_cards.append(result)
@@ -223,6 +256,9 @@ class Chance():
         #Shuffle the List
         shuffle(self.unused_cards)
     
+    def __str__(self) -> str:
+        return 'Chance'
+
     def draw(self) -> ChanceCard:
         result = self.unused_cards[-1]
         self.used_cards.append(result)
@@ -246,7 +282,7 @@ class ChanceCard():
         return self.text
 
 class PlayerList():
-    def __init__(self, l: list[Player]) -> None:
+    def __init__(self, l: list[BasePlayer]) -> None:
         self.l = l
         self.name_to_player = {}
         self.size = len(l)
@@ -260,7 +296,7 @@ class PlayerList():
         for p in self.l:
             yield p
     
-    def __getitem__(self, k: int | str) -> Player:
+    def __getitem__(self, k: int | str) -> BasePlayer:
         result = None
         if isinstance(k, int):
             result = self.l[k]
@@ -270,25 +306,6 @@ class PlayerList():
             raise KeyError(f'Invalid Key: {k}')
         return result
 
-class Player():
-    def __init__(self, name) -> None:
-        #Immutable Fields
-        self.name = name
-
-        #Mutable Fields
-        self.money = 0
-        self.current_space = 0
-        self.properties = []
-        self.railroads = []
-        self.utilities = []
-
-p = Player('Stephen')
-pr = Property('Marvin Gardens', 'Yellow', 280, 24, 120, 360, 850, 1025, 1200, 140, 150, 150)
-rr = RailRoad('Reading Railroad', 200, 25, 50, 100, 200, 100)
-ur = Utility('Electric Company', 150, 4, 10, 75)
-ur.owner = p
-ur.amount_owned = 2
-
-chest = Chance()
-for _ in range(32):
-    print(chest.draw())
+m = MonopolyBoard(None)
+for s in m.board:
+    print(s)
