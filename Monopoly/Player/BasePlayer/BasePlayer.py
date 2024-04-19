@@ -8,13 +8,15 @@ class BasePlayer():
         #Mutable Fields
         self.money = 0
         self.current_space = 0
+        self.in_jail = False
+        self.jail_turns = 0
         self.get_out_of_jail = 0
         self.properties = []
         self.railroads = []
         self.utilities = []
     
-    def roll_dice(self) -> int:
-        return randint(1,6)+randint(1,6)
+    def roll_dice(self) -> tuple[int, int]:
+        return (randint(1,6), randint(1,6))
     
     def should_buy_property(self, property) -> bool:
         if self.money >= property.price:

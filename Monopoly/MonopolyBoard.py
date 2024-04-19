@@ -12,10 +12,16 @@ DIR_PROPERTIES = f'{path.Path(__file__).abspath().parent}\\Data\\properties.csv'
 DIR_RAILROADS = f'{path.Path(__file__).abspath().parent}\\Data\\railroads.csv'
 DIR_UTILITIES = f'{path.Path(__file__).abspath().parent}\\Data\\utilities.csv'
 
+class AIException(Exception):
+    pass
+
 class MonopolyBoard():
     def __init__(self, players: PlayerList) -> None:
-        #Whether there is a game going.
+        #Keep track of whether or not an active game is going on
         self.active = False
+
+        #Keep a log of each turn in a dictionary
+        self.game_log = {}
 
         #Current turn we are on. Increments at the start of a turn
         self.current_turn = 0
@@ -56,6 +62,60 @@ class MonopolyBoard():
         
         #Now we can actually create the list of all spaces
         self.board = ['go', p_list[0], space_commchest, p_list[1], 'income-tax', r_list[0], p_list[2], space_chance, p_list[3], p_list[4], 'jail', p_list[5], u_list[0], p_list[6], p_list[7], r_list[1], p_list[8], space_commchest, p_list[9], p_list[10], 'park', p_list[11], space_chance, p_list[12], p_list[13], r_list[2], p_list[14], p_list[15], u_list[1], p_list[16], 'goto-jail', p_list[17], p_list[18], space_commchest, p_list[19], r_list[3], space_chance, p_list[20], 'luxury-tax', p_list[21]]
+
+    def start_game(self):
+        #Reset variables in order to have a fresh start
+        pass
+
+    def turn(self):
+        #First we increment the number of turns performed, we also want to log the events of the turn
+        #in an array of strings.
+        self.current_turn = self.current_turn + 1
+        turn_log = []
+
+        #Loop through the Player List
+        for p in self.players:
+            #Check if the player is in jail
+            did_roll = False
+            doubles = False
+            roll = -1
+            if p.in_jail:
+                using_card = p.use_get_out_of_jail()
+                will_pay = p.pay_out_of_jail()
+                if using_card:
+                    #Validate this move otherwise throw an exception
+                    if p.get_out_of_jail > 0:
+                        p.in_jail = False
+                    else:
+                        raise AIException(f'AI-({p.name}) attempted to use get out of jail free card but did not have any!')
+                elif will_pay:
+                    #Validate this move
+                    if p.money >= 50:
+                        p.money = p.money - 50
+                        p.in_jail = False
+                    else:
+                        raise AIException(f'AI-({p.name}) attempted to pay $50 jail fine but did only had ${p.money}!')
+                else:
+                    roll = p.roll_dice()
+                    #Validate this result
+                    if not isinstance(roll, tuple):
+                        raise AIException(f'AI-({p.name}) did not return a tuple when rolling dice!')
+                    if not len(roll) == 2:
+                        raise AIException(f'AI-({p.name}) did not roll exactly two dice')
+                    if not isinstance(roll[0], int) or not isinstance(roll[1]):
+                        raise AIException(f'AI-({p.name}) somehow rolled a non-integer value!')
+                    if roll[0] < 1 or roll[0] > 6:
+                        raise AIException(f'AI-({p.name}) rolled a {roll[0]} which is not feasible!')
+                    if roll[1] < 1 or roll[1] > 6:
+                        raise AIException(f'AI-({p.name}) rolled a {roll[1]} which is not feasible!')
+                    #Check we rolled doubles
+                    if roll[0] == roll[1]:
+                        did_roll = True
+                        p.in_jail = False
+            
+            #Now check if player is still in jail, if so we skip turn
+                    
+
 
 class Property():
     def __init__(self, name: str, color: str, price: int, rent, one_ouse, two_house, three_house, four_house, hotel, mortgage_value: int, house_cost: int, hotel_cost: int) -> None:
