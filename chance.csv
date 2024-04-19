@@ -1,0 +1,17 @@
+To,From,Amount,Go To,Pass Go Collect,Text
+self,bank,200,go,0,Advance to Go. Collect $200.
+none,none,0,Illinois Avenue,1,Advance to Illinois Avenue.
+none,none,0,St. Charles Place,1,Advance to St. Charles Place.
+none,none,0,utility,1,Advance to the nearest Utility.
+none,none,0,railroad,1,Advance to the nearest Railroad.
+none,none,0,railroad,1,Advance to the nearest Railroad.
+self,bank,50,none,0,Bank pays you dividend of $50.
+none,none,0,none,0,Get out of Jail Free.
+none,none,0,-3,0,Go Back Three Spaces.
+none,none,0,jail,0,Go to Jail. Go directly to Jail.
+park,self,-2,none,0,Make general repairs on all your property: For each house pay $25. For each hotel pay $100.
+none,none,0,Reading Railroad,1, Take a trip to Reading Railroad.
+park,self,15,none,0,Pay Poor Tax of $15.
+none,none,0,Boardwalk,1,Take a walk on the Boardwalk. Advance to Boardwalk.
+all,self,50,none,0,You have been elected chairman of the Board. Pay each player $50.
+self,bank,150,none,0,Your building loan matures. Collect $150.
