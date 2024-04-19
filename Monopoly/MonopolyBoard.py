@@ -12,9 +12,20 @@ DIR_UTILITIES = f'{path.Path(__file__).abspath().parent}\\Data\\utilities.csv'
 
 class MonopolyBoard():
     def __init__(self) -> None:
+        #Whether there is a game going.
         self.active = False
+
+        #Current turn we are on. Increments at the start of a turn
         self.current_turn = 0
+
+        #List of the Player objects in the game
         self.players = []
+
+        #List of spaces, can be property, railroad, utility, or text with instructions
+        self.spaces = []
+
+        #Map from space index to name of space, for convenience
+        self.space_to_name = {}
 
 class Property():
     def __init__(self, name: str, color: str, price: int, rent, one_ouse, two_house, three_house, four_house, hotel, mortgage_value: int, house_cost: int, hotel_cost: int) -> None:
