@@ -6,6 +6,7 @@ class BasePlayer():
         self.name = name
 
         #Mutable Fields
+        self.bankrupt = False
         self.money = 0
         self.current_space = 0
         self.in_jail = False

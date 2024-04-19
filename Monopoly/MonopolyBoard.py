@@ -75,17 +75,24 @@ class MonopolyBoard():
 
         #Loop through the Player List
         for p in self.players:
+            #If player is bankrupt, skip turn
+            if p.bankrupt:
+                continue
+
             #Check if the player is in jail
             did_roll = False
             doubles = False
+            doubles_count = 0
             roll = -1
             if p.in_jail:
+                p.jail_turns = p.jail_turns + 1
                 using_card = p.use_get_out_of_jail()
                 will_pay = p.pay_out_of_jail()
                 if using_card:
                     #Validate this move otherwise throw an exception
                     if p.get_out_of_jail > 0:
                         p.in_jail = False
+                        p.jail_turns = 0
                     else:
                         raise AIException(f'AI-({p.name}) attempted to use get out of jail free card but did not have any!')
                 elif will_pay:
@@ -93,6 +100,7 @@ class MonopolyBoard():
                     if p.money >= 50:
                         p.money = p.money - 50
                         p.in_jail = False
+                        p.jail_turns = 0
                     else:
                         raise AIException(f'AI-({p.name}) attempted to pay $50 jail fine but did only had ${p.money}!')
                 else:
@@ -112,10 +120,26 @@ class MonopolyBoard():
                     if roll[0] == roll[1]:
                         did_roll = True
                         p.in_jail = False
+                        p.jail_turns = 0
             
-            #Now check if player is still in jail, if so we skip turn
-                    
-
+            #Now check if player is still in jail to check turn limit
+            if p.in_jail:
+                #Check if jail turns is 3
+                if p.jail_turns == 3:
+                    #Check if they have enough money to pay fine
+                    if p.money >= 50:
+                        p.money = p.money - 50
+                        p.in_jail = False
+                    else:
+                        p.money = 0
+                        p.bankrupt = True
+                else:
+                    #Skip if not enough turns
+                    continue
+            
+            #If we made it here, we are not in jail
+            #Now we must perform a turn as long as doubles count is less than 3
+            
 
 class Property():
     def __init__(self, name: str, color: str, price: int, rent, one_ouse, two_house, three_house, four_house, hotel, mortgage_value: int, house_cost: int, hotel_cost: int) -> None:
