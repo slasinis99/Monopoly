@@ -1,5 +1,12 @@
 from __future__ import annotations
+import path
 from time import sleep
+
+DIR_CHANCE = f'{path.Path(__file__).abspath.parent}\\chance.csv'
+DIR_COMMCHEST = f'{path.Path(__file__).abspath.parent}\\communitychest.csv'
+DIR_PROPERTIES = f'{path.Path(__file__).abspath.parent}\\properties.csv' 
+DIR_RAILROADS = f'{path.Path(__file__).abspath.parent}\\railroads.csv'
+DIR_UTILITIES = f'{path.Path(__file__).abspath.parent}\\utilities.csv'
 
 class MonopolyBoard():
     def __init__(self) -> None:
