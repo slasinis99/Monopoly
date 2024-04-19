@@ -1,12 +1,14 @@
 from __future__ import annotations
 import path
+import csv
+from random import shuffle
 from time import sleep
 
-DIR_CHANCE = f'{path.Path(__file__).abspath.parent}\\chance.csv'
-DIR_COMMCHEST = f'{path.Path(__file__).abspath.parent}\\communitychest.csv'
-DIR_PROPERTIES = f'{path.Path(__file__).abspath.parent}\\properties.csv' 
-DIR_RAILROADS = f'{path.Path(__file__).abspath.parent}\\railroads.csv'
-DIR_UTILITIES = f'{path.Path(__file__).abspath.parent}\\utilities.csv'
+DIR_CHANCE = f'{path.Path(__file__).abspath().parent}\\Data\\chance.csv'
+DIR_COMMCHEST = f'{path.Path(__file__).abspath().parent}\\Data\\communitychest.csv'
+DIR_PROPERTIES = f'{path.Path(__file__).abspath().parent}\\Data\\properties.csv' 
+DIR_RAILROADS = f'{path.Path(__file__).abspath().parent}\\Data\\railroads.csv'
+DIR_UTILITIES = f'{path.Path(__file__).abspath().parent}\\Data\\utilities.csv'
 
 class MonopolyBoard():
     def __init__(self) -> None:
@@ -163,6 +165,27 @@ class CommunityChest():
         self.unused_cards = []
         self.used_cards = []
 
+        #Load all Community Chest Cards Into the List
+        with open(DIR_COMMCHEST, 'r') as file:
+            itr = csv.reader(file)
+            next(itr)
+            for row in itr:
+                self.unused_cards.append(CommunityChestCard(str(row[0]), str(row[1]), int(row[2]), str(row[3]), str(row[4])))
+        
+        #Shuffle the List
+        shuffle(self.unused_cards)
+    
+    def draw(self) -> CommunityChestCard:
+        result = self.unused_cards[-1]
+        self.used_cards.append(result)
+        self.unused_cards.pop()
+        if len(self.unused_cards) == 0:
+            self.unused_cards = self.used_cards
+            self.used_cards = []
+            shuffle(self.unused_cards)
+        return result
+        
+
 class CommunityChestCard():
     def __init__(self, payee, payer, amount, goto, text) -> None:
         self.payee = payee
@@ -171,10 +194,33 @@ class CommunityChestCard():
         self.goto = goto
         self.text = text
 
+    def __str__(self) -> str:
+        return self.text
+
 class Chance():
     def __init__(self) -> None:
         self.unused_cards = []
         self.used_cards = []
+
+        #Load all Community Chest Cards Into the List
+        with open(DIR_CHANCE, 'r') as file:
+            itr = csv.reader(file)
+            next(itr)
+            for row in itr:
+                self.unused_cards.append(ChanceCard(str(row[0]), str(row[1]), int(row[2]), str(row[3]), int(row[4]), str(row[5])))
+        
+        #Shuffle the List
+        shuffle(self.unused_cards)
+    
+    def draw(self) -> ChanceCard:
+        result = self.unused_cards[-1]
+        self.used_cards.append(result)
+        self.unused_cards.pop()
+        if len(self.unused_cards) == 0:
+            self.unused_cards = self.used_cards
+            self.used_cards = []
+            shuffle(self.unused_cards)
+        return result
 
 class ChanceCard():
     def __init__(self, payee, payer, amount, goto, collect, text) -> None:
@@ -184,6 +230,9 @@ class ChanceCard():
         self.goto = goto
         self.collect = collect
         self.text = text
+
+    def __str__(self) -> str:
+        return self.text
 
 class PlayerList():
     def __init__(self, l: list[Player]) -> None:
@@ -228,4 +277,7 @@ rr = RailRoad('Reading Railroad', 200, 25, 50, 100, 200, 100)
 ur = Utility('Electric Company', 150, 4, 10, 75)
 ur.owner = p
 ur.amount_owned = 2
-print(ur)
+
+chest = Chance()
+for _ in range(32):
+    print(chest.draw())
