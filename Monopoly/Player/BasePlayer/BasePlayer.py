@@ -7,7 +7,7 @@ class BasePlayer():
 
         #Mutable Fields
         self.bankrupt = False
-        self.money = 0
+        self.money = 1500
         self.current_space = 0
         self.in_jail = False
         self.jail_turns = 0
