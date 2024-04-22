@@ -16,7 +16,19 @@ class BasePlayer():
         self.properties = set()
         self.railroads = set()
         self.utilities = set()
-    
+
+    def reset(self):
+        self.bankrupt = False
+        self.money = 1500
+        self.liquidity = 1500
+        self.current_space = 0
+        self.in_jail = False
+        self.jail_turns = 0
+        self.get_out_of_jail = 0
+        self.properties = set()
+        self.railroads = set()
+        self.utilities = set()
+
     def roll_dice(self, turn_log: list[str]) -> tuple[int, int]:
         """Roll 2d6 and return in a tuple.
 
@@ -50,10 +62,12 @@ class BasePlayer():
         Returns:
             int: New amount to bid (larger than current offer). (0 for decline to bid.)
         """
-        if self.money < current_offer:
+        if self.money <= current_offer:
             return 0
-        if self.money > current_offer + 1 and randint(1,4) < 4:
-            return current_offer + 1
+        inc = current_offer + randint(1,10)
+        if inc > self.money: inc = current_offer + 1
+        if self.money > inc and inc <= property.price:
+            return inc
         return 0
     
     def use_get_out_of_jail(self) -> bool:

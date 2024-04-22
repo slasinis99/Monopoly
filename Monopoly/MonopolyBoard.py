@@ -78,10 +78,19 @@ class MonopolyBoard():
         if roll[1] < 1 or roll[1] > 6:
             raise AIException(f'AI-({p.name}) rolled a {roll[1]} which is not feasible!')
 
-    def start_game(self):
-        #Reset variables in order to have a fresh start
-        pass
+    def simulate_turns(self, n: int, show_turn_log = False):
+        for _ in range(n):
+            self.turn(show_turn_log)
     
+    def reset(self):
+        for p in self.players:
+            p.reset()
+        self.current_turn = 0
+        for s in self.board:
+            if isinstance(s, Property) or isinstance(s, RailRoad) or isinstance(s, Utility):
+                s.reset()
+        shuffle(self.players)
+
     def resolve_jail(self, p: BasePlayer, turn_log: list[str]) -> tuple[int, int]:
         """This is called when a player starts their turn in jail.
 
@@ -476,7 +485,7 @@ class MonopolyBoard():
                             self.resolve_bankruptcy(p, None, turn_log)
                             #Handle Bankruptcy
                 elif card.payee == 'all':
-                    tmp_amount = 50*(len(self.players)-1)
+                    tmp_amount = 50*(len([o for o in self.players if not o.bankrupt])-1)
                     if p.liquidity < tmp_amount:
                         p.bankrupt = True
                         turn_log.append(f'{p.name} could not afford to pay ${tmp_amount} and has gone bankrupt.')
@@ -487,7 +496,7 @@ class MonopolyBoard():
                             p.money -= tmp_amount
                             p.liquidity -= tmp_amount
                             for ply in self.players:
-                                if not ply is p:
+                                if not ply is p and not ply.bankrupt:
                                     ply.money += 50
                                     ply.liquidity += 50
                             turn_log.append(f'{p.name} payed all players $50.')
@@ -559,7 +568,10 @@ class MonopolyBoard():
                 raise AIException(f'{p.name} wanted to buy a property, but refused to liquidate in order to afford it.')
         return False
 
-    def turn(self):
+    def turn(self, show_turn_log = False):
+        #Check if we have already ended the game
+        if len([p for p in self.players if not p.bankrupt]) == 1:
+            return
         #First we increment the number of turns performed, we also want to log the events of the turn
         #in an array of strings.
         self.current_turn = self.current_turn + 1
@@ -622,7 +634,7 @@ class MonopolyBoard():
                 self.resolve_space(space, p, turn_log)
                 
                 #Check if we end the turn here
-                if not jail_roll is None or not rolled_doubles:
+                if not jail_roll is None or not rolled_doubles or p.bankrupt:
                     break
             
             #Now we loop over the properties owned buy this player that are monopolies and ask if they would like to buy a house
@@ -657,14 +669,19 @@ class MonopolyBoard():
                             did_buy = True
 
             #Otherwise we are done with this player
-        #For testing we want to print the turn log
-        for message in turn_log:
-            print(message)
+        if show_turn_log:
+            for message in turn_log:
+                print(message)
+            for p in self.players:
+                print(f'{p.name: <10}: Money ${p.money} vs ${p.liquidity} Liquidity.')
         
         self.game_log[self.current_turn] = turn_log
-        
+
+    def __str__(self) -> str:
+        s = f'Turns Passes: {self.current_turn}\n'
         for p in self.players:
-            print(f'{p.name: <10}: Money ${p.money} vs ${p.liquidity} Liquidity.')
+            s += f'{p.name: <10} - Cash = ${p.money:<5} Net Worth = ${p.liquidity}\n'
+        return s
 
 class Property():
     def __init__(self, name: str, color: str, price: int, rent, one_ouse, two_house, three_house, four_house, hotel, mortgage_value: int, house_cost: int, hotel_cost: int) -> None:
@@ -944,6 +961,9 @@ class PlayerList():
         if result is None:
             raise KeyError(f'Invalid Key: {k}')
         return result
+    
+    def __setitem__(self, k: int, p: BasePlayer) -> None:
+        self.l[k] = p
 
 p1 = BasePlayer('Stephen')
 p2 = BasePlayer('Sara')
@@ -951,6 +971,29 @@ p3 = BasePlayer('Jacob')
 p4 = BasePlayer('Emily')
 pl = PlayerList([p1,p2,p3,p4])
 
-m = MonopolyBoard(pl)
-for _ in range(100):
-    m.turn()
+turn_counts = []
+p1_scores = []
+p2_scores = []
+p3_scores = []
+p4_scores = []
+
+game_number = 1000
+turn_max = 100
+for _ in range(game_number):
+    m = MonopolyBoard(pl)
+    m.reset()
+    m.simulate_turns(turn_max, False)
+    turn_counts.append(m.current_turn)
+    p1_scores.append(p1.liquidity / m.current_turn)
+    p2_scores.append(p2.liquidity / m.current_turn)
+    p3_scores.append(p3.liquidity / m.current_turn)
+    p4_scores.append(p4.liquidity / m.current_turn)
+
+nt = [t for t in turn_counts if t < turn_max]
+if len(nt) > 0:
+    print(f'Average Game Length of a Terminated Game: {sum(nt) / len(nt)} (Occurs {(100*len(nt)/len(turn_counts)):0.2f}% of the time.)')
+print(f'Average Score: {(sum(p1_scores) + sum(p2_scores) + sum(p3_scores) + sum(p4_scores)) / (len(p1_scores) + len(p2_scores) + len(p3_scores) + len(p4_scores))}')
+print(f'Stephen Average: {sum(p1_scores) / len(p1_scores)}')
+print(f'Sara Average: {sum(p2_scores) / len(p2_scores)}')
+print(f'Jacob Average: {sum(p3_scores) / len(p3_scores)}')
+print(f'Emily Average: {sum(p4_scores) / len(p4_scores)}')
