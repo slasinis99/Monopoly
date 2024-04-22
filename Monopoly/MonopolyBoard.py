@@ -28,6 +28,9 @@ class MonopolyBoard():
 
         #List of the Player objects in the game
         self.players = players
+        self.player_space_distributions = {}
+        for p in self.players:
+            self.player_space_distributions[p] = [0]*40
 
         #List of spaces, can be property, railroad, utility, or text with instructions
         self.spaces = []
@@ -362,11 +365,13 @@ class MonopolyBoard():
                 turn_log.append(f'{p.name} has passed Go and collected $200')
                 p.current_space = 0
                 turn_log.append(f'{p.name} landed on Go.')
+                self.player_space_distributions[p][0] += 1
             elif card.goto == 'jail':
                 p.current_space = 10
                 p.in_jail = True
                 p.jail_turns = 0
                 turn_log.append(f'{p.name} landed in Jail.')
+                self.player_space_distributions[p][10] += 1
             
             #Handle the get out of jail free card
             if card.payer is None and card.payee is None and card.goto is None:
@@ -392,11 +397,13 @@ class MonopolyBoard():
                 else:
                     if card.goto == 'go':
                         p.current_space = 0
+                        self.player_space_distributions[p][p.current_space] += 1
                         turn_log.append(f'{p.name} passed Go and collected $200.')
                     elif card.goto == 'jail':
                         p.current_space = 10
                         p.in_jail = True
                         p.jail_turns = 3
+                        self.player_space_distributions[p][p.current_space] += 1
                         turn_log.append(f'{p.name} was sent to jail.')
                     elif card.goto == 'utility':
                         passed_go = False
@@ -411,6 +418,7 @@ class MonopolyBoard():
                             p.money += 200
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200')
+                        self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'railroad':
                         passed_go = False
@@ -429,6 +437,7 @@ class MonopolyBoard():
                             p.money += 200
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
+                        self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'Illinois Avenue':
                         if p.current_space >= 23:
@@ -436,6 +445,7 @@ class MonopolyBoard():
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
                         p.current_space = 23
+                        self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'St. Charles Place':
                         if p.current_space >= 11:
@@ -443,6 +453,7 @@ class MonopolyBoard():
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
                         p.current_space = 11
+                        self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'Reading Railroad':
                         if p.current_space >= 5:
@@ -450,6 +461,7 @@ class MonopolyBoard():
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
                         p.current_space = 5
+                        self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'Boardwalk':
                         if p.current_space >= 39:
@@ -457,6 +469,7 @@ class MonopolyBoard():
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
                         p.current_space = 39
+                        self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
             else:
                 if card.payee == 'self':
@@ -631,6 +644,7 @@ class MonopolyBoard():
 
                 #We now resolve the space the player has landed on. We will process them in order of complexity
                 space = self.board[p.current_space]
+                self.player_space_distributions[p][p.current_space] += 1
                 self.resolve_space(space, p, turn_log)
                 
                 #Check if we end the turn here
@@ -979,8 +993,8 @@ p4_scores = []
 
 game_number = 1000
 turn_max = 100
+m = MonopolyBoard(pl)
 for _ in range(game_number):
-    m = MonopolyBoard(pl)
     m.reset()
     m.simulate_turns(turn_max, False)
     turn_counts.append(m.current_turn)
@@ -994,6 +1008,10 @@ if len(nt) > 0:
     print(f'Average Game Length of a Terminated Game: {sum(nt) / len(nt)} (Occurs {(100*len(nt)/len(turn_counts)):0.2f}% of the time.)')
 print(f'Average Score: {(sum(p1_scores) + sum(p2_scores) + sum(p3_scores) + sum(p4_scores)) / (len(p1_scores) + len(p2_scores) + len(p3_scores) + len(p4_scores))}')
 print(f'Stephen Average: {sum(p1_scores) / len(p1_scores)}')
+print(f'Stephen Distribution: {m.player_space_distributions[p1]}')
 print(f'Sara Average: {sum(p2_scores) / len(p2_scores)}')
+print(f'Sara Distribution: {m.player_space_distributions[p2]}')
 print(f'Jacob Average: {sum(p3_scores) / len(p3_scores)}')
+print(f'Jacob Distribution: {m.player_space_distributions[p3]}')
 print(f'Emily Average: {sum(p4_scores) / len(p4_scores)}')
+print(f'Emily Distribution: {m.player_space_distributions[p4]}')
