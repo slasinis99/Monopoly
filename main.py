@@ -1,16 +1,15 @@
-from Monopoly import MonopolyBoard, BasePlayer, AI_Stephen, PlayerList
+from Monopoly import MonopolyBoard, PlayerList, BasePlayer, AI_Stephen
 
-#Create the AI Players we wish to use
-AI_ONE = AI_Stephen('Stephen')
-AI_TWO = AI_Stephen('Bot Two')
-AI_THREE = BasePlayer('Bot Three')
-AI_FOUR = BasePlayer('Bot Four')
+bots = PlayerList([AI_Stephen('Bot One'),AI_Stephen('Bot Two'),AI_Stephen('Bot Three'),AI_Stephen('Bot Four')])
+m = MonopolyBoard(bots)
 
-#Compile them into a player list
-player_list = PlayerList([AI_ONE, AI_TWO])
+game_count = 10000
+turn_max = 200
 
-#Create the Monopoly Board
-mb = MonopolyBoard(player_list)
+terminate_count = 0
+space_distribution_overall = [0]*40
+space_distribution_per_player = [[0]*40,[0]*40,[0]*40,[0]*40]
+space_distribution_winners = [0]*40
+space_distribution_bankrupts = [0]*40
 
-#Now we can simulate a game
-mb.simulate_game(max_turns=100, show_turn_log=True)
+m.simulate_game()

@@ -40,11 +40,13 @@ class AI_Stephen(BasePlayer):
                         l[0].hotel_count = 0
                         l[0].house_count = 4
                         self.money += l[0].hotel_cost // 2
+                        self.liquidity -= l[0].hotel_cost // 2
                         did_sell = True
                         turn_log.append(f'{self.name} sold a hotel on {l[0].name} and recouped ${l[0].hotel_cost // 2}.')
                     elif l[0].house_count > 0:
                         l[0].house_count -= 1
                         self.money += l[0].house_cost // 2
+                        self.liquidity -= l[0].house_cost // 2
                         did_sell = True
                         turn_log.append(f'{self.name} sold a house on {l[0].name} and recouped ${l[0].house_cost // 2}')
         

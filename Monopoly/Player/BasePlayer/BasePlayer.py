@@ -19,6 +19,8 @@ class BasePlayer():
     should_buy_house(self, property) -> bool
 
     should_buy_hotel(self, property) -> bool
+
+    buy_back_mortgage(self, property) -> bool
     """
     def __init__(self, name) -> None:
         #Immutable Fields
