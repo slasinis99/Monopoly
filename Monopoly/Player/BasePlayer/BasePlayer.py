@@ -1,6 +1,25 @@
 from random import randint
 
 class BasePlayer():
+    """A base class to represent a player in Monopoly. Any subclasses must be sure to properly implement
+    or inherit the following methods:
+
+    roll_dice(self, turn_log: list[str]) -> tuple[int, int]
+
+    should_buy_property(self, property) -> bool
+
+    make_auction_offer(self,property) -> int
+
+    use_get_out_of_jail(self) -> bool
+
+    pay_out_of_jail(self) -> bool
+
+    liquidate(self, amount: int, turn_log: list[str])
+
+    should_buy_house(self, property) -> bool
+
+    should_buy_hotel(self, property) -> bool
+    """
     def __init__(self, name) -> None:
         #Immutable Fields
         self.name = name
@@ -106,11 +125,31 @@ class BasePlayer():
             return True
     
     def should_buy_house(self, property) -> bool:
+        """Given a property that I am allowed to buy a house for, do I?
+
+        Args:
+            property (_type_): The property object, fields found in other file.
+
+        Returns:
+            bool: True/False that I want to buy.
+        """
         if self.money > 3*property.house_cost:
             return True
         return False
     
     def should_buy_hotel(self, property) -> bool:
+        """Given a property that I am allowed to buy a hotel for, do I?
+
+        Args:
+            property (_type_): The property object, fields found in other file.
+
+        Returns:
+            bool: True/False that I want to buy.
+        """
         if self.money > 2*property.hotel_cost:
             return True
         return False
+    
+    def buy_back_mortgage(self, property) -> bool:
+        if self.money >= property.mortgage_value:
+            return True

@@ -4,7 +4,7 @@ import csv
 from random import shuffle, randint
 from time import sleep
 
-from Player import BasePlayer, AI_Stephen
+from .Player import BasePlayer, AI_Stephen
 
 DIR_CHANCE = f'{path.Path(__file__).abspath().parent}\\Data\\chance.csv'
 DIR_COMMCHEST = f'{path.Path(__file__).abspath().parent}\\Data\\communitychest.csv'
@@ -68,6 +68,10 @@ class MonopolyBoard():
         
         #Now we can actually create the list of all spaces
         self.board = ['go', p_list[0], space_commchest, p_list[1], 'income-tax', r_list[0], p_list[2], space_chance, p_list[3], p_list[4], 'jail', p_list[5], u_list[0], p_list[6], p_list[7], r_list[1], p_list[8], space_commchest, p_list[9], p_list[10], 'park', p_list[11], space_chance, p_list[12], p_list[13], r_list[2], p_list[14], p_list[15], u_list[1], p_list[16], 'goto-jail', p_list[17], p_list[18], space_commchest, p_list[19], r_list[3], space_chance, p_list[20], 'luxury-tax', p_list[21]]
+
+    def simulate_game(self, max_turns: int = 1000, show_turn_log: bool = False) -> dict:
+        self.reset()
+        self.simulate_turns(max_turns, show_turn_log)
 
     def validate_roll(self, p, roll):
         if not isinstance(roll, tuple):
@@ -175,22 +179,31 @@ class MonopolyBoard():
         current_bid = 0
         current_player = None
         turn_log.append(f'Auction Beginning for {property.name}.')
-        for p in self.players:
-            #Skip if this player is out of the game
-            if p.bankrupt or current_player is p:
-                continue
-            
-            #Query the player for his or her bid
-            competing_offer = p.make_auction_offer(property, 0)
-            #Validate this offer with the players liquidity
-            if competing_offer > p.liquidity:
-                raise AIException(f'{p.name} attempted to bid ${competing_offer} when they only have ${p.liquidity} in liquidity.')
+        while True:
+            do_break = False
+            for p in self.players:
+                #End auction if this is the current player
+                if current_player is p:
+                    do_break = True
+                    break
 
-            #If it is larger than the current offer, then it stands
-            if competing_offer > current_bid:
-                current_bid = competing_offer
-                current_player = p
-                turn_log.append(f'{current_player.name} raised the offer to ${current_bid}.')
+                #Skip if this player is out of the game
+                if p.bankrupt:
+                    continue
+                
+                #Query the player for his or her bid
+                competing_offer = p.make_auction_offer(property, current_bid)
+                #Validate this offer with the players liquidity
+                if competing_offer > p.liquidity:
+                    raise AIException(f'{p.name} attempted to bid ${competing_offer} when they only have ${p.liquidity} in liquidity.')
+
+                #If it is larger than the current offer, then it stands
+                if competing_offer > current_bid:
+                    current_bid = competing_offer
+                    current_player = p
+                    turn_log.append(f'{current_player.name} raised the offer to ${current_bid}.')
+            if do_break:
+                break
         
         #Now that we've settled on a price, sell it to the player
         if current_bid == 0:
@@ -215,15 +228,12 @@ class MonopolyBoard():
                 for prop in self.board:
                     if isinstance(prop, Property) and prop.color == color:
                         prop.is_monopoly = True
-
+        for rr in [prop for prop in self.board if isinstance(prop, RailRoad) and not prop.owner is None]:
+            rr.amount_owned = len([prop for prop in self.board if isinstance(prop, RailRoad) and prop.owner is rr.owner])
+        for rr in [prop for prop in self.board if isinstance(prop, Utility) and not prop.owner is None]:
+            rr.amount_owned = len([prop for prop in self.board if isinstance(prop, Utility) and prop.owner is rr.owner])
+        
     def acquire_property(self, property: Property | RailRoad | Utility, p: BasePlayer):
-        # if not property.owner is None:
-        #     if isinstance(property, Property):
-        #         property.owner.properties.remove(property)
-        #     elif isinstance(property, RailRoad):
-        #         property.owner.railroads.remove(property)
-        #     else:
-        #         property.owner.utilities.remove(property)
         property.owner = p
         if isinstance(property, Property):
             p.properties.add(property)
@@ -524,6 +534,7 @@ class MonopolyBoard():
                     self.auction_property(space, turn_log)
             elif not space.owner is p:
                 rent = space.rent()
+                turn_log.append(f'{p.name} owes {space.owner.name} ${rent} in rent.')
                 if p.liquidity < rent:
                     self.resolve_bankruptcy(p, space.owner, turn_log)
                 else:
@@ -648,15 +659,51 @@ class MonopolyBoard():
                 self.resolve_space(space, p, turn_log)
                 
                 #Check if we end the turn here
-                if not jail_roll is None or not rolled_doubles or p.bankrupt:
+                if not jail_roll is None or not rolled_doubles or p.bankrupt or p.in_jail:
                     break
             
+            #First we loop over properties that are currently mortgages and query if they want to buy them back
+            did_buy = True
+            while did_buy:
+                did_buy = False
+                for prop in [prop for prop in p.properties if prop.is_mortgaged]:
+                    if p.buy_back_mortgage(prop):
+                        if p.liquidate(prop.mortgage_value, turn_log):
+                            p.money -= prop.mortgage_value
+                            prop.is_mortgaged = False
+                            turn_log.append(f'{p.name} chose to unmortgage {prop.name} for ${prop.mortgage_value}.')
+                            did_buy = True
+
+            #Now we loop over railroads that are currently mortgages and query if they want to buy them back
+            did_buy = True
+            while did_buy:
+                did_buy = False
+                for prop in [prop for prop in p.railroads if prop.is_mortgaged]:
+                    if p.buy_back_mortgage(prop):
+                        if p.liquidate(prop.mortgage_value, turn_log):
+                            p.money -= prop.mortgage_value
+                            prop.is_mortgaged = False
+                            turn_log.append(f'{p.name} chose to unmortgage {prop.name} for ${prop.mortgage_value}.')
+                            did_buy = True
+
+            #Now we loop over utilities that are currently mortgages and query if they want to buy them back
+            did_buy = True
+            while did_buy:
+                did_buy = False
+                for prop in [prop for prop in p.utilities if prop.is_mortgaged]:
+                    if p.buy_back_mortgage(prop):
+                        if p.liquidate(prop.mortgage_value, turn_log):
+                            p.money -= prop.mortgage_value
+                            prop.is_mortgaged = False
+                            turn_log.append(f'{p.name} chose to unmortgage {prop.name} for ${prop.mortgage_value}.')
+                            did_buy = True
+
             #Now we loop over the properties owned buy this player that are monopolies and ask if they would like to buy a house
             did_buy = True
             while did_buy:
                 did_buy = False
                 for prop in p.properties:
-                    if prop.is_monopoly and prop.house_count < 4 and prop.hotel_count < 1 and all([o.house_count >= prop.house_count for o in p.properties if not o is prop and o.color == prop.color]):
+                    if prop.is_monopoly  and prop.house_count < 4 and prop.hotel_count < 1 and all([(o.house_count >= prop.house_count or o.hotel_count > 1) and not o.is_mortgaged for o in p.properties if not o is prop and o.color == prop.color]):
                         if p.liquidity > prop.house_cost and p.should_buy_house(prop):
                             if p.liquidate(prop.house_cost, turn_log):
                                 p.money -= prop.house_cost
@@ -671,13 +718,12 @@ class MonopolyBoard():
             while did_buy:
                 did_buy = False
                 for prop in p.properties:
-                    if prop.house_count == 4 and p.should_buy_hotel(prop):
+                    if all([o.house_count == 4 for o in p.properties if o.color == prop.color]) and p.should_buy_hotel(prop):
                         if p.liquidate(prop.hotel_cost, turn_log):
                             p.money -= prop.hotel_cost
                             p.liquidity -= prop.hotel_cost
                             prop.house_count = 0
                             prop.hotel_count = 1
-                            p.liquidity -= 4 * (prop.house_cost // 2)
                             p.liquidity += prop.hotel_cost // 2
                             turn_log.append(f'{p.name} has purchased a hotel for {prop.name}.')
                             did_buy = True
@@ -795,7 +841,7 @@ class RailRoad():
         self.amount_owned = 0
     
     def rent(self):
-        return self.rents[self.amount_owned]
+        return self.rents[self.amount_owned-1]
 
     def __str__(self) -> str:
         s = f' {"-"*100} \n {f" {self.name} ":-^100} \n {"-"*100} \n'
@@ -849,7 +895,7 @@ class Utility():
         self.amount_owned = 0
     
     def rent(self):
-        return self.rents[self.amount_owned] * (randint(1,6) + randint(1,6))
+        return self.rents[self.amount_owned-1] * (randint(1,6) + randint(1,6))
 
     def __str__(self) -> str:
         s = f' {"-"*100}\n {f" {self.name} ":-^100}\n {"-"*100}\n'
@@ -979,39 +1025,3 @@ class PlayerList():
     def __setitem__(self, k: int, p: BasePlayer) -> None:
         self.l[k] = p
 
-p1 = BasePlayer('Stephen')
-p2 = BasePlayer('Sara')
-p3 = BasePlayer('Jacob')
-p4 = BasePlayer('Emily')
-pl = PlayerList([p1,p2,p3,p4])
-
-turn_counts = []
-p1_scores = []
-p2_scores = []
-p3_scores = []
-p4_scores = []
-
-game_number = 1000
-turn_max = 100
-m = MonopolyBoard(pl)
-for _ in range(game_number):
-    m.reset()
-    m.simulate_turns(turn_max, False)
-    turn_counts.append(m.current_turn)
-    p1_scores.append(p1.liquidity / m.current_turn)
-    p2_scores.append(p2.liquidity / m.current_turn)
-    p3_scores.append(p3.liquidity / m.current_turn)
-    p4_scores.append(p4.liquidity / m.current_turn)
-
-nt = [t for t in turn_counts if t < turn_max]
-if len(nt) > 0:
-    print(f'Average Game Length of a Terminated Game: {sum(nt) / len(nt)} (Occurs {(100*len(nt)/len(turn_counts)):0.2f}% of the time.)')
-print(f'Average Score: {(sum(p1_scores) + sum(p2_scores) + sum(p3_scores) + sum(p4_scores)) / (len(p1_scores) + len(p2_scores) + len(p3_scores) + len(p4_scores))}')
-print(f'Stephen Average: {sum(p1_scores) / len(p1_scores)}')
-print(f'Stephen Distribution: {m.player_space_distributions[p1]}')
-print(f'Sara Average: {sum(p2_scores) / len(p2_scores)}')
-print(f'Sara Distribution: {m.player_space_distributions[p2]}')
-print(f'Jacob Average: {sum(p3_scores) / len(p3_scores)}')
-print(f'Jacob Distribution: {m.player_space_distributions[p3]}')
-print(f'Emily Average: {sum(p4_scores) / len(p4_scores)}')
-print(f'Emily Distribution: {m.player_space_distributions[p4]}')
