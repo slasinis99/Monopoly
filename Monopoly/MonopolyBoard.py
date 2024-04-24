@@ -4,7 +4,7 @@ import csv
 from random import shuffle, randint
 from time import sleep
 
-from .Player import BasePlayer, AI_Stephen
+from .Player import BasePlayer, AI_Jillian
 
 DIR_CHANCE = f'{path.Path(__file__).abspath().parent}\\Data\\chance.csv'
 DIR_COMMCHEST = f'{path.Path(__file__).abspath().parent}\\Data\\communitychest.csv'
@@ -111,10 +111,10 @@ class MonopolyBoard():
         p.jail_turns = p.jail_turns + 1
 
         #Query whether or not the player will use a get out of jail free card.
-        using_card = p.use_get_out_of_jail()
+        using_card = p.use_get_out_of_jail(self.board)
 
         #Query whether or not the player will pay to get out of jail.
-        will_pay = p.pay_out_of_jail()
+        will_pay = p.pay_out_of_jail(self.board)
 
         #Using a get out of jail free card takes priority
         if using_card:
@@ -756,6 +756,7 @@ class Property():
         self.mortgage_value = mortgage_value
         self.house_cost = house_cost
         self.hotel_cost = hotel_cost
+        self.type = 'property'
 
         #Mutable Fields
         self.owner: BasePlayer = None
@@ -832,6 +833,7 @@ class RailRoad():
         self.price = price
         self.rents = [rent_one, rent_two, rent_three, rent_four]
         self.mortgage_value = mortgage_value
+        self.type = 'railroad'
 
         #Mutable Fields
         self.owner = None
@@ -886,6 +888,7 @@ class Utility():
         self.price = price
         self.rents = [rent_one, rent_two]
         self.mortgage_value = mortgage_value
+        self.type = 'utility'
 
         #Mutable Fields
         self.owner: BasePlayer = None

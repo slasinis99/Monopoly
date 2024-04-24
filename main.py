@@ -1,12 +1,14 @@
-from Monopoly import MonopolyBoard, PlayerList, BasePlayer, AI_Stephen, Chance, CommunityChest
+from Monopoly import MonopolyBoard, PlayerList, BasePlayer, AI_Jillian, Chance, CommunityChest
 from statistics import mean, stdev
 
 def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int = 200) -> None:
     terminate_count = 0
     space_distribution_overall = [0]*40
     space_distribution_per_player = {}
+    scores = {}
     for p in m.players:
         space_distribution_per_player[p] = [0]*40
+        scores[p] = 0
     space_distribution_winners = [0]*40
     space_distribution_bankrupts = [0]*40
 
@@ -19,6 +21,7 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
         
         #Handle the overall space distribution
         for p in m.players:
+            scores[p] += p.liquidity / m.current_turn
             for i in range(40):
                 space_distribution_overall[i] += m.player_space_distributions[p][i]
                 space_distribution_per_player[p][i] += m.player_space_distributions[p][i]
@@ -64,8 +67,14 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
         s += f'\n'
     print(s)
 
-bots4 = PlayerList([BasePlayer('Bot One'),BasePlayer('Bot Two'),BasePlayer('Bot Three'),BasePlayer('Bot Four')])
-bots2 = PlayerList([BasePlayer('Stephen'), BasePlayer('Sara')])
-m = MonopolyBoard(bots4)
+    s = f'\nAverage Scores\n'
+    for p in m.players:
+        s += f'{p.name: <10}: {scores[p]/game_count}\n'
+    print(s)
 
-generate_stats(m, 10000, 1000)
+b = [BasePlayer('Bot One'), BasePlayer('Bot Two'), BasePlayer('Bot Three'), BasePlayer('Bot Four')]
+jill = [AI_Jillian('Jillian One'), AI_Jillian('Jillian Two'), AI_Jillian('Jillian Three'), AI_Jillian('Jillian Four')]
+
+m = MonopolyBoard(PlayerList([b[0], jill[1], jill[2], jill[3]]))
+
+generate_stats(m, 1000, 100)

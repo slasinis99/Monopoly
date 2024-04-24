@@ -1,2 +1,2 @@
 from .MonopolyBoard import MonopolyBoard, PlayerList, Chance, CommunityChest
-from .Player import BasePlayer, AI_Stephen
+from .Player import BasePlayer, AI_Jillian

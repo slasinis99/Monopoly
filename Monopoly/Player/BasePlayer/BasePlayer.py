@@ -91,7 +91,7 @@ class BasePlayer():
             return inc
         return 0
     
-    def use_get_out_of_jail(self) -> bool:
+    def use_get_out_of_jail(self, board) -> bool:
         """Answers the question: would you like to use a get out of jail free card?
 
         Returns:
@@ -101,7 +101,7 @@ class BasePlayer():
             return True
         return False
     
-    def pay_out_of_jail(self) -> bool:
+    def pay_out_of_jail(self, board) -> bool:
         """Answers the question: would you like to pay the fine to get out of jail?
 
         Returns:

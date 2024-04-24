@@ -1,1 +1,1 @@
-from .Player import BasePlayer, AI_Stephen
+from .Player import BasePlayer, AI_Jillian
