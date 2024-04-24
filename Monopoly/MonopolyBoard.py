@@ -93,6 +93,9 @@ class MonopolyBoard():
         for p in self.players:
             p.reset()
         self.current_turn = 0
+        self.player_space_distributions = {}
+        for p in self.players:
+            self.player_space_distributions[p] = [0]*40
         for s in self.board:
             if isinstance(s, Property) or isinstance(s, RailRoad) or isinstance(s, Utility):
                 s.reset()
@@ -450,11 +453,11 @@ class MonopolyBoard():
                         self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'Illinois Avenue':
-                        if p.current_space >= 23:
+                        if p.current_space >= 24:
                             p.money += 200
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
-                        p.current_space = 23
+                        p.current_space = 24
                         self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'St. Charles Place':

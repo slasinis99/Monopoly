@@ -120,11 +120,85 @@ class BasePlayer():
         Returns:
             bool: True if we successfully liquidated, False if we decided not (i.e., chose bankruptcy)
         """
-        #Base Implementation will not liquidate any assets.
-        if self.money < amount:
-            return False
-        else:
+        if self.money >= amount:
             return True
+        
+        colors = list(set([prop.color for prop in self.properties if prop.is_monopoly]))
+        colors.sort(key=lambda x: (len([prop for prop in self.properties if prop.color == x]), min(prop.house_cost for prop in self.properties if prop.color == x)))
+
+        did_sell = True
+        while self.money < amount and did_sell == True:
+            did_sell = False
+            for c in colors:
+                if not did_sell:
+                    l = [prop for prop in self.properties if prop.color == c]
+                    l.sort(key=lambda x: (-x.hotel_count, -x.house_count, x.price))
+                    if l[0].hotel_count > 0:
+                        l[0].hotel_count = 0
+                        l[0].house_count = 4
+                        self.money += l[0].hotel_cost // 2
+                        did_sell = True
+                        turn_log.append(f'{self.name} sold a hotel on {l[0].name} and recouped ${l[0].hotel_cost // 2}.')
+                    elif l[0].house_count > 0:
+                        l[0].house_count -= 1
+                        self.money += l[0].house_cost // 2
+                        did_sell = True
+                        turn_log.append(f'{self.name} sold a house on {l[0].name} and recouped ${l[0].house_cost // 2}')
+        
+        #If selling houses and hotels was enough, return true
+        if self.money >= amount:
+            return True
+        
+        #Otherwise we gotta start mortgaging utilities
+        props = [prop for prop in self.utilities if not prop.is_mortgaged]
+        if len(props) > 0:
+            props.sort(key=lambda x: x.mortgage_value)
+            did_sell = True
+            while self.money < amount and did_sell == True:
+                did_sell = False
+                for p in props:
+                    if not did_sell and not p.is_mortgaged:
+                        p.is_mortgaged = True
+                        self.money += p.mortgage_value
+                        turn_log.append(f'{self.name} mortgaged {p.name} and recouped ${p.mortgage_value}.')
+                        did_sell = True
+        
+        if self.money >= amount:
+            return True
+        
+        #Otherwise we gotta start mortgaging railroads
+        props = [prop for prop in self.railroads if not prop.is_mortgaged]
+        if len(props) > 0:
+            props.sort(key=lambda x: x.mortgage_value)
+            did_sell = True
+            while self.money < amount and did_sell == True:
+                did_sell = False
+                for p in props:
+                    if not did_sell and not p.is_mortgaged:
+                        p.is_mortgaged = True
+                        self.money += p.mortgage_value
+                        turn_log.append(f'{self.name} mortgaged {p.name} and recouped ${p.mortgage_value}.')
+                        did_sell = True
+
+        #Otherwise we gotta start mortgaging properties
+        props = [prop for prop in self.properties if not prop.is_mortgaged]
+        if len(props) > 0:
+            props.sort(key=lambda x: x.mortgage_value)
+            did_sell = True
+            while self.money < amount and did_sell == True:
+                did_sell = False
+                for p in props:
+                    if not did_sell and not p.is_mortgaged:
+                        p.is_mortgaged = True
+                        self.money += p.mortgage_value
+                        turn_log.append(f'{self.name} mortgaged {p.name} and recouped ${p.mortgage_value}.')
+                        did_sell = True
+
+        if self.money >= amount:
+            return True
+
+        #Otherwise We are SOL
+        return False
     
     def should_buy_house(self, property) -> bool:
         """Given a property that I am allowed to buy a house for, do I?
