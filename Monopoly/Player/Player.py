@@ -48,3 +48,38 @@ class AI_Jillian(BasePlayer):
     
     def liquidate(self, amount: int, turn_log: list[str]) -> bool:
         return super().liquidate(amount, turn_log)
+    
+class AI_George(BasePlayer):
+    def should_buy_property(self, property) -> bool:
+        if self.money >= property.price + 500:
+            return True
+        return False
+    
+    def buy_back_mortgage(self, property) -> bool:
+        if self.money >= property.mortgage_value + 500:
+            return True
+        return False
+    
+    def should_buy_house(self, property) -> bool:
+        if self.money >= property.house_cost + 500:
+            return True
+        return False
+    
+    def should_buy_hotel(self, property) -> bool:
+        if self.money >= property.hotel_cost + 500:
+            return True
+        return False
+    
+    def use_get_out_of_jail(self, board) -> bool:
+        if self.get_out_of_jail > 0:
+            return True
+        else:
+            return False
+    
+    def pay_out_of_jail(self, board) -> bool:
+        return False
+    
+    def make_auction_offer(self, property, current_offer) -> int:
+        if current_offer + 1 > self.money or current_offer >= 0.3*property.price:
+            return 0
+        return min(current_offer + randint(1,10), 0.3*property.price, self.money)

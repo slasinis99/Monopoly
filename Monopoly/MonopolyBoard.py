@@ -184,6 +184,7 @@ class MonopolyBoard():
         turn_log.append(f'Auction Beginning for {property.name}.')
         while True:
             do_break = False
+            incr = 0
             for p in self.players:
                 #End auction if this is the current player
                 if current_player is p:
@@ -204,12 +205,14 @@ class MonopolyBoard():
                 if competing_offer > current_bid:
                     current_bid = competing_offer
                     current_player = p
+                    incr += 1
                     turn_log.append(f'{current_player.name} raised the offer to ${current_bid}.')
-            if do_break:
+            if do_break or incr == 0:
                 break
         
         #Now that we've settled on a price, sell it to the player
         if current_bid == 0:
+            property.reset()
             turn_log.append(f'No one participated in the auction. The property remains undeveloped.')
         else:
             if current_player.liquidate(current_bid, turn_log):
@@ -253,25 +256,31 @@ class MonopolyBoard():
         if space == 'go':
             #Nothing happens.
             turn_log.append(f'{p.name} landed on Go.')
+            self.player_space_distributions[p][p.current_space] += 1
         elif space == 'jail':
             #Player is just visiting
             turn_log.append(f'{p.name} is just visiting jail.')
+            self.player_space_distributions[p][p.current_space] += 1
         elif space == 'park':
             #Have the player claim money if there is any
             turn_log.append(f'{p.name} landed on Free Parking.')
+            self.player_space_distributions[p][p.current_space] += 1
             if self.park_money > 0:
                 p.money = p.money + self.park_money
                 p.liquidity = p.liquidity + self.park_money
                 turn_log.append(f'{p.name} collected ${self.park_money} from Free Parking.')
                 self.park_money = 0
         elif space == 'goto-jail':
+            self.player_space_distributions[p][p.current_space] += 1
             #Send this player to jail
             p.in_jail = True
             p.jail_turns = 0
             p.current_space = 10
+            self.player_space_distributions[p][p.current_space] += 1
             rolled_doubles = False
             turn_log.append(f'{p.name} landed on Go To Jail and has been sent straight to jail.')
         elif space == 'income-tax':
+            self.player_space_distributions[p][p.current_space] += 1
             #Handle a possible transaction
             turn_log.append(f'{p.name} landed on Income Tax.')
             #Check liquidity
@@ -291,6 +300,7 @@ class MonopolyBoard():
                 turn_log.append(f'{p.name} chose not to liquidate assets and is now bankrupt.')
                 self.resolve_bankruptcy(p, None, turn_log)
         elif space == 'luxury-tax':
+            self.player_space_distributions[p][p.current_space] += 1
             #Handle a possible transaction
             turn_log.append(f'{p.name} landed on Luxury Tax.')
             #Check liquidity
@@ -385,6 +395,8 @@ class MonopolyBoard():
                 p.jail_turns = 0
                 turn_log.append(f'{p.name} landed in Jail.')
                 self.player_space_distributions[p][10] += 1
+            else:
+                self.player_space_distributions[p][p.current_space] += 1
             
             #Handle the get out of jail free card
             if card.payer is None and card.payee is None and card.goto is None:
@@ -404,6 +416,7 @@ class MonopolyBoard():
                 if card.goto == 'none':
                     if card.amount == 0:
                         p.get_out_of_jail += 1
+                        self.player_space_distributions[p][p.current_space] += 1
                     else:
                         p.current_space = (p.current_space - 3) % 40
                         self.resolve_space(self.board[p.current_space], p, turn_log)
@@ -485,6 +498,7 @@ class MonopolyBoard():
                         self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
             else:
+                self.player_space_distributions[p][p.current_space] += 1
                 if card.payee == 'self':
                     p.money += card.amount
                     p.liquidity += card.amount
@@ -531,6 +545,7 @@ class MonopolyBoard():
                             turn_log.append(f'{p.name} chose not to liquidate and has gone bankrupt.')
                             self.resolve_bankruptcy(p, None, turn_log)
         elif isinstance(space, Utility) or isinstance(space, Property) or isinstance(space, RailRoad):
+            self.player_space_distributions[p][p.current_space] += 1
             turn_log.append(f'{p.name} landed on {space.name}.')
             if space.owner is None:
                 if not self.purchase_property(space, p, turn_log):
@@ -599,6 +614,11 @@ class MonopolyBoard():
         #Check if we have already ended the game
         if len([p for p in self.players if not p.bankrupt]) == 1:
             return
+        
+        if len([p for p in self.players if not p.bankrupt]) == 0:
+            print(f'Somehow everyone is bankrupt.')
+            return
+        
         #First we increment the number of turns performed, we also want to log the events of the turn
         #in an array of strings.
         self.current_turn = self.current_turn + 1
@@ -658,7 +678,6 @@ class MonopolyBoard():
 
                 #We now resolve the space the player has landed on. We will process them in order of complexity
                 space = self.board[p.current_space]
-                self.player_space_distributions[p][p.current_space] += 1
                 self.resolve_space(space, p, turn_log)
                 
                 #Check if we end the turn here

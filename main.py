@@ -1,8 +1,10 @@
-from Monopoly import MonopolyBoard, PlayerList, BasePlayer, AI_Jillian, Chance, CommunityChest
+from Monopoly import MonopolyBoard, PlayerList, BasePlayer, AI_Jillian, Chance, CommunityChest, AI_George
 from statistics import mean, stdev
+import numpy as np
 
 def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int = 200) -> None:
     terminate_count = 0
+    terminate_turns = []
     space_distribution_overall = [0]*40
     space_distribution_per_player = {}
     scores = {}
@@ -18,10 +20,11 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
         #Gather the Statistics
         if m.current_turn < turn_limit:
             terminate_count += 1
+            terminate_turns.append(m.current_turn)
         
         #Handle the overall space distribution
         for p in m.players:
-            scores[p] += p.liquidity / m.current_turn
+            scores[p] += (p.money + 2*(p.liquidity-p.money)) / m.current_turn
             for i in range(40):
                 space_distribution_overall[i] += m.player_space_distributions[p][i]
                 space_distribution_per_player[p][i] += m.player_space_distributions[p][i]
@@ -38,6 +41,7 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
     
     #Now present all findings
     print(f'Exactly {terminate_count} games out of {game_count} actually terminated. ({terminate_count / game_count})\n')
+    print(f'Mean turn count for terminated games: {mean(terminate_turns)}, Standard Deviation: {stdev(terminate_turns)}')
 
     #Now we need to turn distributions into percentages
     overall_s = sum(space_distribution_overall)
@@ -56,14 +60,18 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
     #Now we z-score the overall distribution
     z_score = [(v - mean(space_distribution_overall)) / stdev(space_distribution_overall) for v in space_distribution_overall]
 
-    s = f'{" "*25}{"Z-Score": ^10}{"Overall": ^10}{"Winners": ^10}{"Bankrupt": ^10}\n'
+    M = create_transition_matrix()
+    v = create_initial_vector()
+    b = (M**1000)*v
+
+    s = f'{" "*25}{"Z-Score": ^10}{"Overall": ^10}{"Markov": ^10}{"Winners": ^10}{"Bankrupt": ^10}\n'
     for i in range(40):
         sp = m.board[i]
         if isinstance(sp, str) or isinstance(sp, Chance) or isinstance(sp, CommunityChest):
             s += f'{str(sp): <25}'
         else:
             s += f'{sp.name: <25}'
-        s += f'{f"{z_score[i]:0.2f}": ^10}{f"{100*space_distribution_overall[i]:0.2f}%": ^10}{f"{100*space_distribution_winners[i]:0.2f}%": ^10}{f"{100*space_distribution_bankrupts[i]:0.2f}%": ^10}'
+        s += f'{f"{z_score[i]:0.2f}": ^10}{f"{100*space_distribution_overall[i]:0.2f}%": ^10}{f"{float(100*b[i]):0.2f}%": ^10}{f"{100*space_distribution_winners[i]:0.2f}%": ^10}{f"{100*space_distribution_bankrupts[i]:0.2f}%": ^10}'
         s += f'\n'
     print(s)
 
@@ -72,9 +80,52 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
         s += f'{p.name: <10}: {scores[p]/game_count}\n'
     print(s)
 
+def create_transition_matrix():
+    P = [0,0,1,2,3,4,5,6,5,4,3,2,1]
+    M = [40*[0] for _ in range(40)]
+    for i in range(40):
+        if i == 30:
+            M[10][i] = 1
+            continue
+        M[10][i] += (6/36)**3
+        for j in range(2, 13):
+            v = (i+j) % 40
+            p = (1 - (6/36)**3) * P[j] / 36
+            if v in [2,17,33]:
+                M[v][i] += p*15/17
+                M[0][i] += p*1/17
+                M[10][i] += p*1/17
+            elif v in [7,22,36]:
+                M[v][i] += p*6/16
+                M[0][i] += p*1/16
+                M[5][i] += p*1/16
+                M[24][i] += p*1/16
+                M[11][i] += p*1/16
+                M[39][i] += p*1/16
+                M[v-3][i] += p*1/16
+                M[10][i] += p*1/16
+                if v == 7:
+                    M[12][i] += p*1/16
+                    M[15][i] += p*2/16
+                elif v == 22:
+                    M[28][i] += p*1/16
+                    M[25][i] += p*2/16
+                else:
+                    M[12][i] += p*1/16
+                    M[5][i] += p*2/16
+            else:
+                M[v][i] += p
+    return np.matrix(M)
+
+def create_initial_vector():
+    v = 40*[0]
+    v[0] = 1
+    return np.transpose(np.matrix(v))
+
 b = [BasePlayer('Bot One'), BasePlayer('Bot Two'), BasePlayer('Bot Three'), BasePlayer('Bot Four')]
 jill = [AI_Jillian('Jillian One'), AI_Jillian('Jillian Two'), AI_Jillian('Jillian Three'), AI_Jillian('Jillian Four')]
+george = [AI_George('George One'), AI_George('George Two'), AI_George('George Three'), AI_George('George Four')]
 
-m = MonopolyBoard(PlayerList([b[0], jill[1], jill[2], jill[3]]))
+m = MonopolyBoard(PlayerList([jill[0],jill[1],jill[2]]))
 
-generate_stats(m, 1000, 100)
+generate_stats(m, 1_000, 1_000)
