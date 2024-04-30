@@ -62,7 +62,7 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
 
     M = create_transition_matrix()
     v = create_initial_vector()
-    b = (M**1000)*v
+    b = (M**2000)*v
 
     s = f'{" "*25}{"Z-Score": ^10}{"Overall": ^10}{"Markov": ^10}{"Winners": ^10}{"Bankrupt": ^10}\n'
     for i in range(40):
@@ -80,6 +80,16 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
         s += f'{p.name: <10}: {scores[p]/game_count}\n'
     print(s)
 
+    st = []
+    for i in list(b):
+        st.append(float(i))
+    print(f'Steady State Distribution:')
+    print(st)
+    print(f'Measured Distribution:')
+    print(space_distribution_overall)
+    print(f'Winner Distribution:')
+    print(space_distribution_winners)
+
 def create_transition_matrix():
     P = [0,0,1,2,3,4,5,6,5,4,3,2,1]
     M = [40*[0] for _ in range(40)]
@@ -91,6 +101,7 @@ def create_transition_matrix():
         for j in range(2, 13):
             v = (i+j) % 40
             p = (1 - (6/36)**3) * P[j] / 36
+            # p = P[j] / 36
             if v in [2,17,33]:
                 M[v][i] += p*15/17
                 M[0][i] += p*1/17
@@ -128,4 +139,4 @@ george = [AI_George('George One'), AI_George('George Two'), AI_George('George Th
 
 m = MonopolyBoard(PlayerList([b[0], b[1], b[2], b[3]]))
 
-generate_stats(m, 1_000, 1_000)
+generate_stats(m, 10_000, 1_000)

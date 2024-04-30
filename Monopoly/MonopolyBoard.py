@@ -423,13 +423,13 @@ class MonopolyBoard():
                 else:
                     if card.goto == 'go':
                         p.current_space = 0
-                        self.player_space_distributions[p][p.current_space] += 1
+                        #self.player_space_distributions[p][p.current_space] += 1
                         turn_log.append(f'{p.name} passed Go and collected $200.')
                     elif card.goto == 'jail':
                         p.current_space = 10
                         p.in_jail = True
                         p.jail_turns = 3
-                        self.player_space_distributions[p][p.current_space] += 1
+                        #self.player_space_distributions[p][p.current_space] += 1
                         turn_log.append(f'{p.name} was sent to jail.')
                     elif card.goto == 'utility':
                         passed_go = False
@@ -444,7 +444,7 @@ class MonopolyBoard():
                             p.money += 200
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200')
-                        self.player_space_distributions[p][p.current_space] += 1
+                        #self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'railroad':
                         passed_go = False
@@ -463,7 +463,7 @@ class MonopolyBoard():
                             p.money += 200
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
-                        self.player_space_distributions[p][p.current_space] += 1
+                        #self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'Illinois Avenue':
                         if p.current_space >= 24:
@@ -471,7 +471,7 @@ class MonopolyBoard():
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
                         p.current_space = 24
-                        self.player_space_distributions[p][p.current_space] += 1
+                        #self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'St. Charles Place':
                         if p.current_space >= 11:
@@ -479,7 +479,7 @@ class MonopolyBoard():
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
                         p.current_space = 11
-                        self.player_space_distributions[p][p.current_space] += 1
+                        #self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'Reading Railroad':
                         if p.current_space >= 5:
@@ -487,7 +487,7 @@ class MonopolyBoard():
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
                         p.current_space = 5
-                        self.player_space_distributions[p][p.current_space] += 1
+                        #self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'Boardwalk':
                         if p.current_space >= 39:
@@ -495,7 +495,7 @@ class MonopolyBoard():
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
                         p.current_space = 39
-                        self.player_space_distributions[p][p.current_space] += 1
+                        #self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
             else:
                 self.player_space_distributions[p][p.current_space] += 1
@@ -640,6 +640,8 @@ class MonopolyBoard():
             
             #Check if player is bankrupt for good measure or still in jail
             if p.bankrupt or p.in_jail:
+                if p.in_jail:
+                    self.player_space_distributions[p][10] += 1
                 continue
 
             #Now we need to perform turns until we hit a stopping condition
