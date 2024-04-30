@@ -126,6 +126,6 @@ b = [BasePlayer('Bot One'), BasePlayer('Bot Two'), BasePlayer('Bot Three'), Base
 jill = [AI_Jillian('Jillian One'), AI_Jillian('Jillian Two'), AI_Jillian('Jillian Three'), AI_Jillian('Jillian Four')]
 george = [AI_George('George One'), AI_George('George Two'), AI_George('George Three'), AI_George('George Four')]
 
-m = MonopolyBoard(PlayerList([jill[0],jill[1],jill[2]]))
+m = MonopolyBoard(PlayerList([b[0], b[1], b[2], b[3]]))
 
 generate_stats(m, 1_000, 1_000)
