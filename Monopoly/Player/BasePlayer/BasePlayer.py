@@ -107,7 +107,7 @@ class BasePlayer():
         Returns:
             bool: True/False depending on decision.
         """
-        if self.money >= 50:
+        if self.liquidity >= 50:
             return True
         return False
     

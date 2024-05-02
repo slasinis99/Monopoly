@@ -1,7 +1,7 @@
 from .BasePlayer import BasePlayer
 from random import randint
 
-class AI_Jillian(BasePlayer):
+class AI_J(BasePlayer):
     def roll_dice(self, turn_log: list[str]) -> tuple[int, int]:
         return super().roll_dice(turn_log)
     
@@ -49,7 +49,7 @@ class AI_Jillian(BasePlayer):
     def liquidate(self, amount: int, turn_log: list[str]) -> bool:
         return super().liquidate(amount, turn_log)
     
-class AI_George(BasePlayer):
+class AI_G(BasePlayer):
     def should_buy_property(self, property) -> bool:
         if self.money >= property.price + 500:
             return True

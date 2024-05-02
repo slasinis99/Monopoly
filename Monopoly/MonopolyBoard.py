@@ -4,7 +4,7 @@ import csv
 from random import shuffle, randint
 from time import sleep
 
-from .Player import BasePlayer, AI_Jillian
+from .Player import BasePlayer, AI_J, AI_G
 
 DIR_CHANCE = f'{path.Path(__file__).abspath().parent}\\Data\\chance.csv'
 DIR_COMMCHEST = f'{path.Path(__file__).abspath().parent}\\Data\\communitychest.csv'
@@ -256,15 +256,12 @@ class MonopolyBoard():
         if space == 'go':
             #Nothing happens.
             turn_log.append(f'{p.name} landed on Go.')
-            self.player_space_distributions[p][p.current_space] += 1
         elif space == 'jail':
             #Player is just visiting
             turn_log.append(f'{p.name} is just visiting jail.')
-            self.player_space_distributions[p][p.current_space] += 1
         elif space == 'park':
             #Have the player claim money if there is any
             turn_log.append(f'{p.name} landed on Free Parking.')
-            self.player_space_distributions[p][p.current_space] += 1
             if self.park_money > 0:
                 p.money = p.money + self.park_money
                 p.liquidity = p.liquidity + self.park_money
@@ -276,11 +273,9 @@ class MonopolyBoard():
             p.in_jail = True
             p.jail_turns = 0
             p.current_space = 10
-            self.player_space_distributions[p][p.current_space] += 1
             rolled_doubles = False
             turn_log.append(f'{p.name} landed on Go To Jail and has been sent straight to jail.')
         elif space == 'income-tax':
-            self.player_space_distributions[p][p.current_space] += 1
             #Handle a possible transaction
             turn_log.append(f'{p.name} landed on Income Tax.')
             #Check liquidity
@@ -300,7 +295,6 @@ class MonopolyBoard():
                 turn_log.append(f'{p.name} chose not to liquidate assets and is now bankrupt.')
                 self.resolve_bankruptcy(p, None, turn_log)
         elif space == 'luxury-tax':
-            self.player_space_distributions[p][p.current_space] += 1
             #Handle a possible transaction
             turn_log.append(f'{p.name} landed on Luxury Tax.')
             #Check liquidity
@@ -388,15 +382,11 @@ class MonopolyBoard():
                 turn_log.append(f'{p.name} has passed Go and collected $200')
                 p.current_space = 0
                 turn_log.append(f'{p.name} landed on Go.')
-                self.player_space_distributions[p][0] += 1
             elif card.goto == 'jail':
                 p.current_space = 10
                 p.in_jail = True
                 p.jail_turns = 0
                 turn_log.append(f'{p.name} landed in Jail.')
-                self.player_space_distributions[p][10] += 1
-            else:
-                self.player_space_distributions[p][p.current_space] += 1
             
             #Handle the get out of jail free card
             if card.payer is None and card.payee is None and card.goto is None:
@@ -416,20 +406,17 @@ class MonopolyBoard():
                 if card.goto == 'none':
                     if card.amount == 0:
                         p.get_out_of_jail += 1
-                        self.player_space_distributions[p][p.current_space] += 1
                     else:
                         p.current_space = (p.current_space - 3) % 40
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                 else:
                     if card.goto == 'go':
                         p.current_space = 0
-                        #self.player_space_distributions[p][p.current_space] += 1
                         turn_log.append(f'{p.name} passed Go and collected $200.')
                     elif card.goto == 'jail':
                         p.current_space = 10
                         p.in_jail = True
-                        p.jail_turns = 3
-                        #self.player_space_distributions[p][p.current_space] += 1
+                        p.jail_turns = 0
                         turn_log.append(f'{p.name} was sent to jail.')
                     elif card.goto == 'utility':
                         passed_go = False
@@ -444,7 +431,6 @@ class MonopolyBoard():
                             p.money += 200
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200')
-                        #self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'railroad':
                         passed_go = False
@@ -463,7 +449,6 @@ class MonopolyBoard():
                             p.money += 200
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
-                        #self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'Illinois Avenue':
                         if p.current_space >= 24:
@@ -471,7 +456,6 @@ class MonopolyBoard():
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
                         p.current_space = 24
-                        #self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'St. Charles Place':
                         if p.current_space >= 11:
@@ -479,7 +463,6 @@ class MonopolyBoard():
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
                         p.current_space = 11
-                        #self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'Reading Railroad':
                         if p.current_space >= 5:
@@ -487,7 +470,6 @@ class MonopolyBoard():
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
                         p.current_space = 5
-                        #self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
                     elif card.goto == 'Boardwalk':
                         if p.current_space >= 39:
@@ -495,10 +477,8 @@ class MonopolyBoard():
                             p.liquidity += 200
                             turn_log.append(f'{p.name} passed Go and collected $200.')
                         p.current_space = 39
-                        #self.player_space_distributions[p][p.current_space] += 1
                         self.resolve_space(self.board[p.current_space], p, turn_log)
             else:
-                self.player_space_distributions[p][p.current_space] += 1
                 if card.payee == 'self':
                     p.money += card.amount
                     p.liquidity += card.amount
@@ -545,7 +525,6 @@ class MonopolyBoard():
                             turn_log.append(f'{p.name} chose not to liquidate and has gone bankrupt.')
                             self.resolve_bankruptcy(p, None, turn_log)
         elif isinstance(space, Utility) or isinstance(space, Property) or isinstance(space, RailRoad):
-            self.player_space_distributions[p][p.current_space] += 1
             turn_log.append(f'{p.name} landed on {space.name}.')
             if space.owner is None:
                 if not self.purchase_property(space, p, turn_log):
@@ -640,14 +619,15 @@ class MonopolyBoard():
             
             #Check if player is bankrupt for good measure or still in jail
             if p.bankrupt or p.in_jail:
-                if p.in_jail:
-                    self.player_space_distributions[p][10] += 1
                 continue
 
             #Now we need to perform turns until we hit a stopping condition
             doubles_count = 0
             rolled_doubles = False
             while True:
+                #Record the space we are on at the start of this roll
+                if self.current_turn > 1:
+                    self.player_space_distributions[p][p.current_space] += 1
                 #If we have a valid jail roll, use that otherwise make a roll
                 roll = jail_roll
                 if roll is None:

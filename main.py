@@ -1,9 +1,11 @@
-from Monopoly import MonopolyBoard, PlayerList, BasePlayer, AI_Jillian, Chance, CommunityChest, AI_George
+from Monopoly import MonopolyBoard, PlayerList, BasePlayer, AI_J, Chance, CommunityChest, AI_G
 from statistics import mean, stdev
 import numpy as np
 
 def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int = 200) -> None:
     terminate_count = 0
+    longest_game = 0
+    shortest_game = turn_limit+1
     terminate_turns = []
     space_distribution_overall = [0]*40
     space_distribution_per_player = {}
@@ -21,6 +23,11 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
         if m.current_turn < turn_limit:
             terminate_count += 1
             terminate_turns.append(m.current_turn)
+            t = m.current_turn
+            if t < shortest_game:
+                shortest_game = t
+            if t > longest_game:
+                longest_game = t
         
         #Handle the overall space distribution
         for p in m.players:
@@ -42,6 +49,7 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
     #Now present all findings
     print(f'Exactly {terminate_count} games out of {game_count} actually terminated. ({terminate_count / game_count})\n')
     print(f'Mean turn count for terminated games: {mean(terminate_turns)}, Standard Deviation: {stdev(terminate_turns)}')
+    print(f'The longest game was {longest_game} turns, and the shortest game was {shortest_game} turns.')
 
     #Now we need to turn distributions into percentages
     overall_s = sum(space_distribution_overall)
@@ -61,8 +69,16 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
     z_score = [(v - mean(space_distribution_overall)) / stdev(space_distribution_overall) for v in space_distribution_overall]
 
     M = create_transition_matrix()
-    v = create_initial_vector()
-    b = (M**2000)*v
+    # v = create_initial_vector()
+    # b = (M**2000)*v
+
+    w, v = np.linalg.eig(M)
+
+    ev = v[:,0]
+    b = []
+    s = float(np.real(sum(ev)))
+    for i in range(len(ev)):
+        b.append(float(float(np.real(ev[i])) / s))
 
     s = f'{" "*25}{"Z-Score": ^10}{"Overall": ^10}{"Markov": ^10}{"Winners": ^10}{"Bankrupt": ^10}\n'
     for i in range(40):
@@ -83,12 +99,12 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
     st = []
     for i in list(b):
         st.append(float(i))
-    print(f'Steady State Distribution:')
-    print(st)
-    print(f'Measured Distribution:')
-    print(space_distribution_overall)
-    print(f'Winner Distribution:')
-    print(space_distribution_winners)
+    # print(f'Steady State Distribution:')
+    # print(st)
+    # print(f'Measured Distribution:')
+    # print(space_distribution_overall)
+    # print(f'Winner Distribution:')
+    # print(space_distribution_winners)
 
 def create_transition_matrix():
     P = [0,0,1,2,3,4,5,6,5,4,3,2,1]
@@ -101,7 +117,6 @@ def create_transition_matrix():
         for j in range(2, 13):
             v = (i+j) % 40
             p = (1 - (6/36)**3) * P[j] / 36
-            # p = P[j] / 36
             if v in [2,17,33]:
                 M[v][i] += p*15/17
                 M[0][i] += p*1/17
