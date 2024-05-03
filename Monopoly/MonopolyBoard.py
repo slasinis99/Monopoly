@@ -262,13 +262,12 @@ class MonopolyBoard():
         elif space == 'park':
             #Have the player claim money if there is any
             turn_log.append(f'{p.name} landed on Free Parking.')
-            if self.park_money > 0:
-                p.money = p.money + self.park_money
-                p.liquidity = p.liquidity + self.park_money
-                turn_log.append(f'{p.name} collected ${self.park_money} from Free Parking.')
-                self.park_money = 0
+            # if self.park_money > 0:
+            #     p.money = p.money + self.park_money
+            #     p.liquidity = p.liquidity + self.park_money
+            #     turn_log.append(f'{p.name} collected ${self.park_money} from Free Parking.')
+            #     self.park_money = 0
         elif space == 'goto-jail':
-            self.player_space_distributions[p][p.current_space] += 1
             #Send this player to jail
             p.in_jail = True
             p.jail_turns = 0

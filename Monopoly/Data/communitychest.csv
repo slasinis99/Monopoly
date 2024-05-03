@@ -1,16 +1,17 @@
 To,From,Amount,GoTo,Text
 none,none,0,go,Advance to GO. (Collect $200)
 self,bank,200,none,Bank error in your favor. Collect $200.
-park,self,50,none,Doctor's Fees. Pay $50
+park,self,50,none,Doctor's Fees. Pay $50.
+self,bank,50,none,From the sale of stock you get $50.
 none,none,0,none,Get Out of Jail Free.
 none,none,0,jail,Go to Jail. You do not pass Go. You do not collect $200
 self,all,50,none,Grand Opera Night. Collect $50 from every player for opening night seats.
 self,bank,100,none,Holiday Fund matures. Collect $100.
-self,bank,20,none,Income tax refund. Collect $20
+self,bank,20,none,Income tax refund. Collect $20.
 self,all,10,none,It is your birthday. Collect $10 from every player.
 self,bank,100,none,Life insurance matures. Collect $100.
 park,self,50,none,Hospital Fees. Pay $50.
-park,self,50,none,School Fees. Pay $50
+park,self,50,none,School Fees. Pay $50.
 self,bank,25,none,Receive $25 consultancy fee.
 park,self,-1,none,You are assessed for street repairs: Pay $40 per house and $115 per hotel you own.
 self,bank,10,none,You have won second prize in a beauty contest. Collect $10.
