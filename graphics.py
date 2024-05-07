@@ -42,7 +42,7 @@ for i in range(len(percent_overall)):
 # Space names
 board_layout = ["Go","Med Ave","Com Ches","Balt Ave","Inc Tax","Read Rl","Orient","Chance","Vermont","Conn Ave","Jail","St Chas","Elec Co","States","Virginia","Penn Rl","St James","Com Ches","Tenn Ave","New York","Free Pk","Kentucky","Chance","Indiana","Illinois","B&O Rl","Atlantic","Ventnor","Water W","Marvin G","Go Jail","Pacific","North C","Com Ches","Penn Ave","Short Ln","Chance","Park Pl","Lux Tax","Boardwalk"]
 
-data = percent_overall_v_steady
+data = percent_overall
 
 # Define the colormap (using 'inferno' or PuRd colormap)
 cmap = plt.cm.OrRd
@@ -63,7 +63,7 @@ colors = [sm.to_rgba(number) for number in data]
 for i, coord in enumerate(coords):
     small_square = plt.Rectangle(coord, small_square_size, small_square_size, color=colors[i])
     ax.add_patch(small_square)
-    ax.text(coord[0]+0.5, coord[1]+0.5, f'{board_layout[i]}\n{f"{100*data[i]:0.2f}%"}', color='black', ha='center', va='center', fontsize=8)
+    ax.text(coord[0]+0.5, coord[1]+0.5, f'{board_layout[i]}\n{f"{100*data[i]:0.2f}%"}\n({f"{100*percent_steady[i]:0.2f}%"})', color='black', ha='center', va='center', fontsize=8)
 
 # Set axis limits and labels
 ax.set_xlim(0, large_square_size)
@@ -75,7 +75,7 @@ ax.set_yticklabels("")
 ax.set_aspect('equal')
 
 # Show the plot
-plt.title('Steady State vs Measured Space Distribution')
+plt.title('Measured Space Distribution')
 # plt.grid(True)
 plt.tick_params(left = False, bottom = False)
 plt.tight_layout()

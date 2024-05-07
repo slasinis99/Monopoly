@@ -122,6 +122,8 @@ def generate_stats(m: MonopolyBoard, game_count: int = 10_000, turn_limit: int =
     print(st)
     print(f'Measured Distribution:')
     print(space_distribution_overall)
+    print(f'Measured Non-Terminate')
+    print(space_distribution_non_terminate)
     print(f'Winner Distribution:')
     print(space_distribution_winners)
     print(f'Bankrupt Distribution')
@@ -187,4 +189,4 @@ george = [AI_G('G One'), AI_G('G Two'), AI_G('G Three'), AI_G('George Four')]
 
 m = MonopolyBoard(PlayerList([b[0], b[1], b[2], b[3]]))
 
-generate_stats(m, 1_000_000, 2_000)
+generate_stats(m, 10_000, 2_000)

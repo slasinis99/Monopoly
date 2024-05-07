@@ -107,6 +107,7 @@ class MonopolyBoard():
         Args:
             p (_type_): Player to resolve turn for.
         """
+        self.player_space_distributions[p][p.current_space] += 1
         #Increment number of turns spent in jail
         p.jail_turns = p.jail_turns + 1
 
@@ -613,7 +614,9 @@ class MonopolyBoard():
 
             #Check if the player is in jail
             jail_roll = None
+            started_jail = False
             if p.in_jail:
+                started_jail = True
                 jail_roll = self.resolve_jail(p, turn_log)
             
             #Check if player is bankrupt for good measure or still in jail
@@ -625,8 +628,9 @@ class MonopolyBoard():
             rolled_doubles = False
             while True:
                 #Record the space we are on at the start of this roll
-                if self.current_turn > 1:
+                if (self.current_turn > 1 or doubles_count > 0) and not started_jail:
                     self.player_space_distributions[p][p.current_space] += 1
+                    started_jail = False
                 #If we have a valid jail roll, use that otherwise make a roll
                 roll = jail_roll
                 if roll is None:
