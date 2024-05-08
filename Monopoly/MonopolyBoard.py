@@ -71,6 +71,17 @@ class MonopolyBoard():
 
     def simulate_game(self, max_turns: int = 1000, show_turn_log: bool = False) -> dict:
         self.reset()
+
+        props = [[1,3], [6,8,9], [11,13,14], [16,18,19], [21,23,24], [26,27,29], [31,32,34], [37,39]]
+        for i, p in enumerate(self.players):
+            for s in props[i]:
+                self.acquire_property(self.board[s], p)
+            p.money += 100000
+            p.liquidity += 100000
+            p.current_space = 30
+            while p.current_space == 30:
+                p.current_space = randint(0,39)
+
         self.simulate_turns(max_turns, show_turn_log)
 
     def validate_roll(self, p, roll):
@@ -99,7 +110,7 @@ class MonopolyBoard():
         for s in self.board:
             if isinstance(s, Property) or isinstance(s, RailRoad) or isinstance(s, Utility):
                 s.reset()
-        shuffle(self.players)
+        # shuffle(self.players)
 
     def resolve_jail(self, p: BasePlayer, turn_log: list[str]) -> tuple[int, int]:
         """This is called when a player starts their turn in jail.
