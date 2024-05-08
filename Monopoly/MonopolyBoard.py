@@ -630,7 +630,7 @@ class MonopolyBoard():
                 #Record the space we are on at the start of this roll
                 if (self.current_turn > 1 or doubles_count > 0) and not started_jail:
                     self.player_space_distributions[p][p.current_space] += 1
-                    started_jail = False
+                started_jail = False
                 #If we have a valid jail roll, use that otherwise make a roll
                 roll = jail_roll
                 if roll is None:

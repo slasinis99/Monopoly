@@ -41,11 +41,11 @@ def get_points(color: str, house_count: int = 0, turns: int = 500):
     # print(f'Expected Rent Per Turn for {color: ^12}: {exp_rent_per_turn}\nExpected Rent to Cost Ratio: {(100*exp_rent_per_turn / cost):.2f}%\n')
 
     x = [1]
-    y = [exp_rent_per_turn / cost]
+    y = [exp_rent_per_turn]
 
     t = 2
 
-    while y[-1] < 1:
+    while y[-1] < 1000:
         x.append(t)
         y.append(t*exp_rent_per_turn / cost)
         t += 1
@@ -88,7 +88,7 @@ def main():
         s = f'{c} '
         for i in range(6):
             x, y = get_points(c, i)
-            s += f'& {x[-1]} '
+            s += f'& {y[0]:0.2f} '
         s += f'\\\\\\hline'
         print(s)
 
