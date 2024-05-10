@@ -69,19 +69,26 @@ class MonopolyBoard():
         #Now we can actually create the list of all spaces
         self.board = ['go', p_list[0], space_commchest, p_list[1], 'income-tax', r_list[0], p_list[2], space_chance, p_list[3], p_list[4], 'jail', p_list[5], u_list[0], p_list[6], p_list[7], r_list[1], p_list[8], space_commchest, p_list[9], p_list[10], 'park', p_list[11], space_chance, p_list[12], p_list[13], r_list[2], p_list[14], p_list[15], u_list[1], p_list[16], 'goto-jail', p_list[17], p_list[18], space_commchest, p_list[19], r_list[3], space_chance, p_list[20], 'luxury-tax', p_list[21]]
 
-    def simulate_game(self, max_turns: int = 1000, show_turn_log: bool = False) -> dict:
+    def simulate_game(self, max_turns: int = 1000, show_turn_log: bool = False):
+        self.reset()
+        self.simulate_turns(max_turns, show_turn_log)
+
+    def simulate_arrangement(self, arrangement, max_turns = 5000, show_turn_log = False):
+        if len(self.players) > len(arrangement):
+            self.players = self.players[0:len(arrangement)]
+        
         self.reset()
 
-        props = [[1,3], [6,8,9], [11,13,14], [16,18,19], [21,23,24], [26,27,29], [31,32,34], [37,39]]
         for i, p in enumerate(self.players):
-            for s in props[i]:
-                self.acquire_property(self.board[s], p)
-            p.money += 100000
-            p.liquidity += 100000
+            for s in arrangement[i]:
+                for j in s:
+                    self.acquire_property(self.board[j], p)
+            p.money += 100_000
+            p.liquidity += 100_000
             p.current_space = 30
             while p.current_space == 30:
                 p.current_space = randint(0,39)
-
+        
         self.simulate_turns(max_turns, show_turn_log)
 
     def validate_roll(self, p, roll):

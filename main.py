@@ -187,26 +187,6 @@ b = [BasePlayer('Bot One'), BasePlayer('Bot Two'), BasePlayer('Bot Three'), Base
 jill = [AI_J('J One'), AI_J('J Two'), AI_J('J Three'), AI_J('J Four')]
 george = [AI_G('G One'), AI_G('G Two'), AI_G('G Three'), AI_G('George Four')]
 
-m = MonopolyBoard(PlayerList([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]]))
+m = MonopolyBoard(PlayerList([b[0], b[1], b[2]]))
 
-#generate_stats(m, 1_000, 2_000)
-
-non_term = 0
-player_wins = [0,0,0,0,0,0,0,0]
-
-for _ in tqdm(range(10000)):
-    m.simulate_game(max_turns=5000, show_turn_log=False)
-    if m.current_turn == 5000:
-        non_term += 1
-    else:
-        for i, p in enumerate(m.players):
-            if not p.bankrupt:
-                player_wins[i] += 1
-
-print(non_term)
-
-s = sum(player_wins)
-if s > 0:
-    for i in range(8):
-        player_wins[i] = player_wins[i] / s
-    print(player_wins)
+generate_stats(m, 1_000_000, 2_000)
