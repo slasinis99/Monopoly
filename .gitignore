@@ -1,5 +1,6 @@
-/colorsetpercents.csv
-/combinations.py
-/graphics.py
-/recoup.py
-Graphics/
+colorsetpercents.csv
+combinations.py
+graphics.py
+recoup.py
+turn_distributions.py
+/Graphics
